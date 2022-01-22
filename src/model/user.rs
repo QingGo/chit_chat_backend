@@ -8,14 +8,21 @@ use serde::{Deserialize, Serialize};
 pub struct User {
     id: String,
     ip: String,
+}
+
+#[derive(Default, Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Getters)]
+pub struct UserWithToken {
+    user: User,
     token: u64,
 }
 
-pub fn create_user(user_id: &str, user_ip: &str) -> User {
+pub fn create_user(user_id: &str, user_ip: &str) -> UserWithToken {
     let token = calc_user_token(user_id, user_ip);
-    User {
-        id: user_id.to_string(),
-        ip: user_ip.to_string(),
+    UserWithToken {
+        user: User {
+            id: user_id.to_string(),
+            ip: user_ip.to_string(),
+        },
         token,
     }
 }

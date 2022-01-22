@@ -1,7 +1,9 @@
 use actix_web::web;
+mod chat;
 mod room;
 mod user;
 mod utils;
+use chat::{get_chat_list, send_chat};
 use room::{create_room, delete_room, get_room};
 use user::{login, logout};
 
@@ -10,7 +12,9 @@ pub fn router_config(cfg: &mut web::ServiceConfig) {
         .service(delete_room)
         .service(get_room)
         .service(login)
-        .service(logout);
+        .service(logout)
+        .service(get_chat_list)
+        .service(send_chat);
 }
 
 #[cfg(test)]

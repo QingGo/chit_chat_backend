@@ -1,4 +1,4 @@
-use super::utils::{gene_error_response, gene_success_user_response, ErrorCode};
+use super::utils::{check_user_token, gene_error_response, gene_success_user_response, ErrorCode};
 use crate::model::user;
 use crate::utils::format_and_debug_msg;
 use actix_session::Session;
@@ -21,7 +21,7 @@ async fn login(
         .set("user", &new_user)
         .map(|_| {
             let message = format_and_debug_msg!("User login successfully");
-            gene_success_user_response(message, &new_user)
+            gene_success_user_response(message, new_user.user())
         })
         .unwrap_or_else(|message| gene_error_response(ErrorCode::LoginError, message.to_string()))
 }
@@ -33,13 +33,7 @@ async fn logout(session: Session) -> HttpResponse {
 }
 
 fn _logout(session: Session) -> Result<HttpResponse, Box<dyn Error>> {
-    let old_user = session
-        .get::<user::User>("user")?
-        .ok_or("No user field in cookies")?;
-    let token = user::calc_user_token(&old_user.id(), &old_user.ip());
-    if token != *old_user.token() {
-        Err("User token is not match")?;
-    }
+    let old_user = check_user_token(&session)?;
     session.remove("user");
     let message = format_and_debug_msg!("User logout successfully");
     Ok(gene_success_user_response(message, &old_user))

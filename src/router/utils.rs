@@ -1,4 +1,9 @@
-use crate::model::{room::Room, user::User};
+use crate::model::{
+    chat::SingleChat,
+    room::Room,
+    user::{self, User},
+};
+use actix_session::Session;
 use actix_web::HttpResponse;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -11,6 +16,9 @@ pub enum ErrorCode {
     RoomNotExisted = 10002,
     LoginError = 10003,
     LogoutError = 10004,
+    LoginNotValid = 10005,
+    SendChatError = 10006,
+    GetChatListError = 10007,
 }
 
 impl Default for ErrorCode {
@@ -24,6 +32,22 @@ struct BaseResponseBody<T> {
     code: ErrorCode,
     message: String,
     data: T,
+}
+
+pub fn gene_success_common_response(message: String) -> HttpResponse {
+    HttpResponse::Ok().json(BaseResponseBody::<Option<String>> {
+        code: ErrorCode::Success,
+        message,
+        data: None,
+    })
+}
+
+pub fn gene_success_chat_list_response(chat_list: Vec<SingleChat>) -> HttpResponse {
+    HttpResponse::Ok().json(BaseResponseBody::<Vec<SingleChat>> {
+        code: ErrorCode::Success,
+        message: "Get chat list successfully".to_string(),
+        data: chat_list,
+    })
 }
 
 pub fn gene_success_room_response(message: String, room: &Room) -> HttpResponse {
@@ -56,4 +80,16 @@ pub fn gene_error_response(error_code: ErrorCode, message: String) -> HttpRespon
         message,
         data: None,
     })
+}
+
+pub fn check_user_token(session: &Session) -> Result<User, String> {
+    let old_user = session
+        .get::<user::UserWithToken>("user")
+        .map_err(|e| e.to_string())?
+        .ok_or("No user field in cookies")?;
+    let token = user::calc_user_token(old_user.user().id(), old_user.user().ip());
+    if token != *old_user.token() {
+        return Err("User token is not match".into());
+    };
+    Ok(old_user.user().clone())
 }

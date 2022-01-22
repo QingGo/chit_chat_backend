@@ -2,13 +2,21 @@ use crate::utils::format_and_debug_msg;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock};
 
+use super::chat;
+
 lazy_static! {
     static ref ROOMS_LIST: Arc<RwLock<Vec<Room>>> = Arc::new(RwLock::new(vec![]));
 }
 
-#[derive(Default, Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Hash)]
 pub struct Room {
     id: String,
+}
+
+pub fn new_room(room_id: &str) -> Room {
+    Room {
+        id: room_id.to_string(),
+    }
 }
 
 pub fn get_rooms() -> Vec<Room> {
@@ -24,6 +32,8 @@ pub fn create_room(room_id: &str) -> Result<Room, String> {
     let new_room = Room {
         id: room_id.to_string(),
     };
+    // will to diffenert lock result in inconsistent state?
+    chat::create_room(new_room.clone())?;
     rooms_list.push(new_room.clone());
     Ok(new_room)
 }
