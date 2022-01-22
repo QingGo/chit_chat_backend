@@ -1,3 +1,4 @@
+use actix_session::CookieSession;
 use actix_web::{middleware, App, HttpServer};
 #[macro_use]
 extern crate lazy_static;
@@ -14,6 +15,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .wrap(middleware::Logger::default())
+            .wrap(CookieSession::signed(&[0; 32]).secure(false))
             .configure(router_config)
     })
     .bind("127.0.0.1:8080")?
