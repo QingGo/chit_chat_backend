@@ -1,0 +1,1 @@
+The Backend project of chit_chat, a simple web chat server: https://github.com/QingGo/chit_chat
